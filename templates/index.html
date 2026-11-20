@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QR Code Generator</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            text-align: center;
+            padding: 50px 15px;
+        }
+
+        .container {
+            background: white;
+            max-width: 400px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #222;
+        }
+
+        input {
+            width: 90%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #qr-result {
+            margin-top: 25px;
+        }
+
+        #qr-result img {
+            width: 200px;
+            max-width: 100%;
+        }
+
+        #message {
+            color: #d33;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>QR Code Generator</h1>
+
+        <p>Enter your website URL below</p>
+
+        <input
+            type="url"
+            id="url"
+            placeholder="https://example.com"
+        >
+
+        <br>
+
+        <button onclick="generateQR()">
+            Generate QR
+        </button>
+
+        <p id="message"></p>
+
+        <div id="qr-result"></div>
+
+    </div>
+
+
+    <script>
+
+        async function generateQR() {
+
+            const url = document.getElementById("url").value;
+
+            const result = document.getElementById("qr-result");
+
+            const message = document.getElementById("message");
+
+            // Check empty input
+            if (!url.trim()) {
+                message.innerText = "Please enter a website URL!";
+                result.innerHTML = "";
+                return;
+            }
+
+            message.innerText = "Generating QR code...";
+            result.innerHTML = "";
+
+            try {
+
+                // Send URL to FastAPI backend
+                const response = await fetch("/qr", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        url: url
+                    })
+
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || "Invalid URL");
+                }
+
+                // Display QR code
+                result.innerHTML = `
+                    <h3>Your QR Code</h3>
+                    <img src="data:image/png;base64,${data.qr_code}"
+                    alt="Generated QR Code">
+                `;
+
+                message.innerText = "";
+
+            }
+
+            catch (error) {
+
+                message.innerText = error.message;
+
+            }
+
+        }
+
+    </script>
+
+</body>
+</html>
